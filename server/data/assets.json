@@ -1,0 +1,134 @@
+[
+  {
+    "_id": "muvk9i25ah6f",
+    "userId": "muvk8moow7dd9q",
+    "name": "HDFC Bank",
+    "ticker": "HDFCBANK",
+    "type": "stock",
+    "price": 1650,
+    "quantity": 100,
+    "notes": "Core banking holding for long-term compounding.",
+    "createdAt": "2026-10-05T18:06:07.277Z"
+  },
+  {
+    "_id": "muvk9i35bh7g",
+    "userId": "muvk8moow7dd9q",
+    "name": "TCS",
+    "ticker": "TCS",
+    "type": "stock",
+    "price": 4100,
+    "quantity": 80,
+    "notes": "Large-cap IT exposure with stable cash flows.",
+    "createdAt": "2026-10-05T18:06:12.000Z"
+  },
+  {
+    "_id": "muvk9i4cch8h",
+    "userId": "muvk8moow7dd9q",
+    "name": "Infosys",
+    "ticker": "INFY",
+    "type": "stock",
+    "price": 1750,
+    "quantity": 90,
+    "notes": "Digital transformation exposure.",
+    "createdAt": "2026-10-05T18:06:18.000Z"
+  },
+  {
+    "_id": "muvk9i5ddj9j",
+    "userId": "muvk8moow7dd9q",
+    "name": "Axis Bank",
+    "ticker": "AXISBANK",
+    "type": "stock",
+    "price": 1210,
+    "quantity": 150,
+    "notes": "Balanced financial-services exposure.",
+    "createdAt": "2026-10-05T18:06:26.000Z"
+  },
+  {
+    "_id": "muvk9i6eek1k",
+    "userId": "muvk8moow7dd9q",
+    "name": "SBI Bluechip Fund",
+    "ticker": "SBIBLUE",
+    "type": "mutual_fund",
+    "price": 2500,
+    "quantity": 500,
+    "notes": "Core mutual fund allocation.",
+    "createdAt": "2026-10-05T18:06:33.000Z"
+  },
+  {
+    "_id": "muvk9i7ffm2m",
+    "userId": "muvk8moow7dd9q",
+    "name": "Gold ETF",
+    "ticker": "GOLDETF",
+    "type": "gold",
+    "price": 7800,
+    "quantity": 120,
+    "notes": "Inflation hedge and portfolio ballast.",
+    "createdAt": "2026-10-05T18:06:40.000Z"
+  },
+  {
+    "_id": "muvk9i8ggn3n",
+    "userId": "muvk8moow7dd9q",
+    "name": "Bitcoin",
+    "ticker": "BTC",
+    "type": "crypto",
+    "price": 6600000,
+    "quantity": 1,
+    "notes": "High-conviction crypto position with long-term volatility.",
+    "createdAt": "2026-10-05T18:06:49.000Z"
+  },
+  {
+    "_id": "muvk9i9hho4o",
+    "userId": "muvk8moow7dd9q",
+    "name": "Nifty 50 ETF",
+    "ticker": "NIFTYETF",
+    "type": "other",
+    "price": 2450,
+    "quantity": 220,
+    "notes": "Broad-market equity beta exposure.",
+    "createdAt": "2026-10-05T18:06:55.000Z"
+  },
+  {
+    "_id": "muvk9iadrp5p",
+    "userId": "muvk8moow7dd9q",
+    "name": "Bengaluru Apartment",
+    "ticker": "BGLRAPT",
+    "type": "real_estate",
+    "price": 35000000,
+    "quantity": 1,
+    "notes": "Long-hold real-estate allocation.",
+    "createdAt": "2026-10-05T18:07:03.000Z"
+  },
+  {
+    "_id": "muvk9ibesq6q",
+    "userId": "muvk8moow7dd9q",
+    "name": "US Tech Index",
+    "ticker": "USTECH",
+    "type": "other",
+    "price": 1900,
+    "quantity": 300,
+    "notes": "Global growth exposure outside India.",
+    "createdAt": "2026-10-05T18:07:12.000Z"
+  },
+  {
+    "_id": "muvk0xrg3t1e",
+    "userId": "muvjmwt694k2y5",
+    "name": "property rt nagar ",
+    "ticker": "home",
+    "type": "real_estate",
+    "price": 30000000,
+    "quantity": 1,
+    "notes": "",
+    "createdAt": "2026-10-05T17:59:27.725Z"
+  },
+  {
+    "_id": "muvjok4zgqvz",
+    "userId": "muvjmwt694k2y5",
+    "name": "gold",
+    "ticker": "G",
+    "type": "gold",
+    "price": 14000,
+    "quantity": 2000,
+    "notes": "",
+    "createdAt": "2026-10-05T17:49:50.195Z"
+  }
+]

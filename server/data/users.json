@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "muvjmwt694k2y5",
+    "name": "juanid",
+    "email": "junaidmohammeduk@gmail.com",
+    "passwordHash": "$2a$10$m7FLaQTh4dIjKkr3SDQnOuhPJWB7vVmWC838Vw44f4.R7v2xPg.32",
+    "createdAt": "2026-10-05T17:48:33.306Z"
+  },
+  {
+    "_id": "muvk8moow7dd9q",
+    "name": "AI Smoke Investor",
+    "email": "ai.smoke.user@example.com",
+    "passwordHash": "$2a$10$TgzhWij/IRe/63V6I94W6uNqjNBh/RurV83TYyY2fwviY5yQNVmYK",
+    "createdAt": "2026-10-05T18:05:26.616Z"
+  }
+]
