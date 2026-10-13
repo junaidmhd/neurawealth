@@ -1,4 +1,4 @@
-const API = "/api";
+const API = "https://neurawealth-e8ay-beige.vercel.app/api";
 
 // Wraps fetch(): attaches the JWT from localStorage automatically and
 // forces a re-login if the backend says the session is no longer valid.
