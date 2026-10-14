@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
 
-const API = "/api";
+const API = "https://neurawealth-e8ay-beige.vercel.app/api";
 
 function EarthCanvas() {
   const canvasRef = useRef(null);
