@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 const https = require("https");
 require("dotenv").config();
 
@@ -24,6 +25,24 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+// Connect to MongoDB before handling API requests
+app.use(async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("MongoDB connection failed:", error.message);
+
+    res.status(503).json({
+      message: "Database temporarily unavailable",
+    });
+  }
+});
 
 /* ─── AUTH ─── */
 app.use("/api/auth", authRoutes);

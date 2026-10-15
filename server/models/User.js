@@ -1,58 +1,107 @@
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const DATA_DIR = path.join(__dirname, "..", "data");
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-const USERS_FILE = path.join(DATA_DIR, "users.json");
-
-function readUsers() {
-  try {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
-  } catch {
-    return [];
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
   }
+);
+
+const UserModel =
+  mongoose.models.User || mongoose.model("User", userSchema);
+
+function normalizeUser(user) {
+  if (!user) return null;
+
+  const result =
+    typeof user.toObject === "function" ? user.toObject() : user;
+
+  return {
+    _id: result._id.toString(),
+    name: result.name,
+    email: result.email,
+    createdAt: result.createdAt
+      ? new Date(result.createdAt).toISOString()
+      : undefined,
+    updatedAt: result.updatedAt
+      ? new Date(result.updatedAt).toISOString()
+      : undefined,
+  };
 }
 
-function writeUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
-}
-
-function findByEmail(email) {
+async function findByEmail(email) {
   if (!email) return null;
-  const users = readUsers();
-  return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+
+  const user = await UserModel.findOne({
+    email: email.toLowerCase().trim(),
+  });
+
+  return normalizeUser(user);
 }
 
-function findById(id) {
-  const users = readUsers();
-  return users.find(u => u._id === id) || null;
+async function findById(id) {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const user = await UserModel.findById(id);
+
+  return normalizeUser(user);
 }
 
 async function createUser({ name, email, password }) {
-  const users = readUsers();
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = {
-    _id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-    name,
-    email: email.toLowerCase(),
+
+  const user = await UserModel.create({
+    name: name.trim(),
+    email: email.toLowerCase().trim(),
     passwordHash,
-    createdAt: new Date().toISOString(),
-  };
-  users.push(user);
-  writeUsers(users);
-  return user;
+  });
+
+  return normalizeUser(user);
 }
 
 async function verifyPassword(user, password) {
+  if (!user || !user.passwordHash) {
+    return false;
+  }
+
   return bcrypt.compare(password, user.passwordHash);
 }
 
 function toPublic(user) {
   if (!user) return null;
-  const { passwordHash, ...publicUser } = user;
+
+  const {
+    passwordHash,
+    ...publicUser
+  } = user;
+
   return publicUser;
 }
 
-module.exports = { readUsers, writeUsers, findByEmail, findById, createUser, verifyPassword, toPublic };
+module.exports = {
+  findByEmail,
+  findById,
+  createUser,
+  verifyPassword,
+  toPublic,
+};
