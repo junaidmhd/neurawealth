@@ -1,0 +1,54 @@
+{
+  "muvjmwt694k2y5": {
+    "habits": [
+      {
+        "id": "h0",
+        "title": "Tracked today's spending"
+      },
+      {
+        "id": "h1",
+        "title": "Skipped one impulse buy"
+      },
+      {
+        "id": "h2",
+        "title": "Saved or invested something"
+      },
+      {
+        "id": "h3",
+        "title": "Read 10 minutes of market news"
+      },
+      {
+        "id": "h4",
+        "title": "Reviewed my portfolio"
+      }
+    ],
+    "log": {
+      "2026-10-05": []
+    }
+  },
+  "muvk8moow7dd9q": {
+    "habits": [
+      {
+        "id": "h0",
+        "title": "Tracked today's spending"
+      },
+      {
+        "id": "h1",
+        "title": "Skipped one impulse buy"
+      },
+      {
+        "id": "h2",
+        "title": "Saved or invested something"
+      },
+      {
+        "id": "h3",
+        "title": "Read 10 minutes of market news"
+      },
+      {
+        "id": "h4",
+        "title": "Reviewed my portfolio"
+      }
+    ],
+    "log": {}
+  }
+}
