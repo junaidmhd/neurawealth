@@ -1,168 +1,256 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useAuth } from "../App";
 import { apiFetch } from "../api";
-import GroqKeyCard from "./GroqKeyCard";
 
 export default function Settings() {
-  const [status, setStatus] = useState(null); // { configured, masked, source }
-  const [apiKey, setApiKey] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState(null); // { type: 'ok'|'err', text }
-  const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwMsg, setPwMsg] = useState(null);
+  const [pwLoading, setPwLoading] = useState(false);
 
-  const load = () => {
-    setLoading(true);
-    apiFetch("/settings/api-key")
-      .then(r => r.json())
-      .then(setStatus)
-      .catch(() => setStatus(null))
-      .finally(() => setLoading(false));
-  };
+  const setPw = (k, v) => setPwForm(f => ({ ...f, [k]: v }));
 
-  useEffect(load, []);
-
-  const save = async (e) => {
+  const changePassword = async (e) => {
     e.preventDefault();
-    if (!apiKey.trim()) return;
-    setSaving(true);
-    setMsg(null);
+    if (pwForm.next !== pwForm.confirm) {
+      setPwMsg({ ok: false, text: "New passwords don't match." });
+      return;
+    }
+    if (pwForm.next.length < 8) {
+      setPwMsg({ ok: false, text: "Password must be at least 8 characters." });
+      return;
+    }
+    setPwLoading(true);
+    setPwMsg(null);
     try {
-      const res = await apiFetch("/settings/api-key", {
+      const res = await apiFetch("/auth/change-password", {
         method: "POST",
-        body: JSON.stringify({ apiKey: apiKey.trim() }),
+        body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save key");
-      setMsg({ type: "ok", text: "API key saved. It's now used for Live Fetch requests." });
-      setApiKey("");
-      load();
+      if (!res.ok) throw new Error(data.message || "Failed to update password");
+      setPwMsg({ ok: true, text: "Password updated." });
+      setPwForm({ current: "", next: "", confirm: "" });
     } catch (err) {
-      setMsg({ type: "err", text: err.message });
+      setPwMsg({ ok: false, text: err.message });
     } finally {
-      setSaving(false);
-    }
-  };
-
-  const clearKey = async () => {
-    setSaving(true);
-    setMsg(null);
-    try {
-      const res = await apiFetch("/settings/api-key", { method: "DELETE" });
-      const data = await res.json();
-      setMsg({ type: "ok", text: data.message });
-      load();
-    } catch (err) {
-      setMsg({ type: "err", text: err.message });
-    } finally {
-      setSaving(false);
+      setPwLoading(false);
     }
   };
 
   return (
-    <div style={{ flex: 1, overflow: "auto", padding: 32 }}>
-      <div style={{ maxWidth: 560 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Settings</h1>
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 28 }}>
-          Configure the TinyFish key (Live Fetch) and the Groq key (AI Advisor). Keys are shared across
-          the whole app (global, not per-user) and is stored on the server.
-        </p>
+    <div style={S.page}>
+      <div style={S.header}>
+        <h1 style={S.title}>Settings</h1>
+        <p style={S.sub}>Manage your account.</p>
+      </div>
 
-        <div style={{
-          background: "var(--bg-secondary)", border: "1px solid var(--border)",
-          borderRadius: 12, padding: 24,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 8, background: "rgba(139,94,60,0.12)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{ color: "var(--accent-blue)" }}>
-                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" stroke="currentColor" strokeWidth="1.8"/>
-                <path d="M8 12s1.5 2 4 2 4-2 4-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </div>
+      <div style={S.body}>
+        {/* Account info */}
+        <section style={S.card}>
+          <h3 style={S.cardTitle}>Account</h3>
+          <div style={S.infoRow}>
+            <span style={S.infoLabel}>Name</span>
+            <span style={S.infoValue}>{user?.name || "—"}</span>
+          </div>
+          <div style={S.infoRow}>
+            <span style={S.infoLabel}>Email</span>
+            <span style={S.infoValue}>{user?.email || "—"}</span>
+          </div>
+          <div style={S.infoRow}>
+            <span style={S.infoLabel}>Member since</span>
+            <span style={S.infoValue}>
+              {user?.createdAt
+                ? new Date(user.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "long" })
+                : "—"}
+            </span>
+          </div>
+        </section>
+
+        {/* AI Status */}
+        <section style={S.card}>
+          <h3 style={S.cardTitle}>AI Advisor</h3>
+          <div style={S.aiStatus}>
+            <div style={S.aiDot} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>TinyFish API Key</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Powers Live Fetch (web data)</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--green)" }}>Active</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                Powered by Groq · llama-3.3-70b-versatile · Managed by NeuraWealth
+              </div>
             </div>
           </div>
+          <p style={S.aiNote}>
+            The AI advisor is managed by NeuraWealth — no API key is needed from you.
+            It provides general financial information, not licensed investment advice.
+          </p>
+        </section>
 
-          {loading ? (
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Loading…</div>
-          ) : (
-            <>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8, marginBottom: 18,
-                fontSize: 12, padding: "8px 12px", borderRadius: 8,
-                background: status?.configured ? "rgba(74,124,89,0.08)" : "rgba(92,64,51,0.04)",
-                border: `1px solid ${status?.configured ? "rgba(74,124,89,0.25)" : "var(--border)"}`,
-              }}>
-                <div style={{
-                  width: 7, height: 7, borderRadius: "50%",
-                  background: status?.configured ? "var(--accent-green)" : "var(--text-muted)",
-                }} />
-                {status?.configured
-                  ? <span>Active — <strong>{status.masked}</strong> ({status.source === "settings" ? "set via Settings" : "from server .env"})</span>
-                  : <span>No API key configured — Live Fetch will be unavailable</span>}
+        {/* Change password */}
+        <section style={S.card}>
+          <h3 style={S.cardTitle}>Change password</h3>
+          <form onSubmit={changePassword} style={S.form}>
+            <div style={S.fieldGroup}>
+              <label style={S.label}>Current password</label>
+              <input
+                type="password"
+                value={pwForm.current}
+                onChange={e => setPw("current", e.target.value)}
+                style={S.input}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <div style={S.fieldGroup}>
+              <label style={S.label}>New password</label>
+              <input
+                type="password"
+                value={pwForm.next}
+                onChange={e => setPw("next", e.target.value)}
+                style={S.input}
+                placeholder="At least 8 characters"
+                minLength={8}
+                required
+              />
+            </div>
+            <div style={S.fieldGroup}>
+              <label style={S.label}>Confirm new password</label>
+              <input
+                type="password"
+                value={pwForm.confirm}
+                onChange={e => setPw("confirm", e.target.value)}
+                style={S.input}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            {pwMsg && (
+              <div style={{ ...S.msg, ...(pwMsg.ok ? S.msgOk : S.msgErr) }}>
+                {pwMsg.text}
               </div>
+            )}
+            <button type="submit" disabled={pwLoading} style={S.btn}>
+              {pwLoading ? "Updating…" : "Update password"}
+            </button>
+          </form>
+        </section>
 
-              <form onSubmit={save}>
-                <label style={{ fontSize: 12, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
-                  New API key
-                </label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={e => setApiKey(e.target.value)}
-                  placeholder="tf_..."
-                  autoComplete="off"
-                  style={{
-                    width: "100%", background: "rgba(92,64,51,0.04)", border: "1px solid var(--border)",
-                    borderRadius: 8, padding: "10px 12px", fontFamily: "monospace", fontSize: 13,
-                    color: "var(--text-primary)", outline: "none", marginBottom: 14, boxSizing: "border-box",
-                  }}
-                />
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button type="submit" disabled={saving || !apiKey.trim()} style={{
-                    padding: "9px 18px", borderRadius: 8, border: "none",
-                    background: "var(--gradient-btn)", color: "white", fontWeight: 600, fontSize: 13,
-                    cursor: saving || !apiKey.trim() ? "not-allowed" : "pointer",
-                    opacity: saving || !apiKey.trim() ? 0.6 : 1,
-                  }}>
-                    {saving ? "Saving…" : "Save key"}
-                  </button>
-                  {status?.source === "settings" && (
-                    <button type="button" onClick={clearKey} disabled={saving} style={{
-                      padding: "9px 18px", borderRadius: 8, cursor: "pointer",
-                      background: "transparent", border: "1px solid var(--border)",
-                      color: "var(--text-secondary)", fontSize: 13,
-                    }}>
-                      Clear (fall back to .env)
-                    </button>
-                  )}
-                </div>
-              </form>
-
-              {msg && (
-                <div style={{
-                  marginTop: 14, fontSize: 12, padding: "8px 12px", borderRadius: 8,
-                  background: msg.type === "ok" ? "rgba(74,124,89,0.08)" : "rgba(179,64,47,0.08)",
-                  border: `1px solid ${msg.type === "ok" ? "rgba(74,124,89,0.25)" : "rgba(179,64,47,0.25)"}`,
-                  color: msg.type === "ok" ? "var(--accent-green)" : "var(--accent-red)",
-                }}>
-                  {msg.text}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <GroqKeyCard />
-
-        <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 14 }}>
-          These keys are used server-side for every Live Fetch request from every user — it is not
-          per-user. Anyone who can log in can view/replace it here, so treat this as an admin setting.
-        </p>
+        {/* Danger zone */}
+        <section style={{ ...S.card, borderColor: "rgba(224,82,82,0.2)" }}>
+          <h3 style={{ ...S.cardTitle, color: "var(--red)" }}>Sign out</h3>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16, lineHeight: 1.5 }}>
+            You'll need to sign back in to access your portfolio and AI advisor.
+          </p>
+          <button onClick={logout} style={S.dangerBtn}>Sign out</button>
+        </section>
       </div>
     </div>
   );
 }
+
+const S = {
+  page: { flex: 1, overflow: "auto", animation: "fadeIn 0.3s ease" },
+  header: { padding: "28px 32px 0" },
+  title: { fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 26, color: "var(--text-primary)" },
+  sub: { fontSize: 13, color: "var(--text-secondary)", marginTop: 4 },
+  body: { padding: "24px 32px 48px", maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 },
+  card: {
+    background: "var(--bg-card)",
+    border: "1px solid var(--border)",
+    borderRadius: 14,
+    padding: 24,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "var(--text-primary)",
+    marginBottom: 18,
+    fontFamily: "'Inter', sans-serif",
+  },
+  infoRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "10px 0",
+    borderBottom: "1px solid var(--border)",
+  },
+  infoLabel: { fontSize: 13, color: "var(--text-secondary)" },
+  infoValue: { fontSize: 13, fontWeight: 500, color: "var(--text-primary)" },
+  aiStatus: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 12,
+    padding: "12px 14px",
+    background: "rgba(61,170,114,0.06)",
+    border: "1px solid rgba(61,170,114,0.2)",
+    borderRadius: 10,
+    marginBottom: 14,
+  },
+  aiDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    background: "var(--green)",
+    marginTop: 4,
+    flexShrink: 0,
+    boxShadow: "0 0 6px rgba(61,170,114,0.5)",
+  },
+  aiNote: {
+    fontSize: 12,
+    color: "var(--text-muted)",
+    lineHeight: 1.5,
+  },
+  form: { display: "flex", flexDirection: "column" },
+  fieldGroup: { marginBottom: 14 },
+  label: { display: "block", fontSize: 12, fontWeight: 500, color: "var(--text-secondary)", marginBottom: 6 },
+  input: {
+    width: "100%",
+    background: "var(--bg-input)",
+    border: "1px solid var(--border)",
+    borderRadius: 10,
+    padding: "10px 14px",
+    fontSize: 14,
+    color: "var(--text-primary)",
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s",
+  },
+  msg: {
+    padding: "10px 14px",
+    borderRadius: 8,
+    fontSize: 13,
+    marginBottom: 14,
+  },
+  msgOk: {
+    background: "var(--green-dim)",
+    border: "1px solid rgba(61,170,114,0.25)",
+    color: "var(--green)",
+  },
+  msgErr: {
+    background: "var(--red-dim)",
+    border: "1px solid rgba(224,82,82,0.25)",
+    color: "var(--red)",
+  },
+  btn: {
+    padding: "10px 20px",
+    background: "linear-gradient(135deg, #C9A84C 0%, #A8873A 100%)",
+    color: "#0D1B2A",
+    border: "none",
+    borderRadius: 10,
+    fontSize: 14,
+    fontWeight: 700,
+    cursor: "pointer",
+    width: "fit-content",
+    fontFamily: "inherit",
+  },
+  dangerBtn: {
+    padding: "9px 18px",
+    background: "var(--red-dim)",
+    border: "1px solid rgba(224,82,82,0.3)",
+    color: "var(--red)",
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+};
