@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: neurawealth-backend
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://junaidmohammeduk_db_user:db_junaid78292@junaid.qv9bmls.mongodb.net/neurawealth
+      - key: JWT_SECRET
+        value: neurawealth_jwt_super_secret_2024_xK9mP3qR
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
