@@ -1,7 +1,5 @@
-const API = (import.meta.env.VITE_API_URL || "https://neurawealth-production.up.railway.app") + "/api";
+const API = "/api";
 
-// Wraps fetch(): attaches the JWT from localStorage automatically and
-// forces a re-login if the backend says the session is no longer valid.
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("nw_token");
   const headers = { ...(options.headers || {}) };
