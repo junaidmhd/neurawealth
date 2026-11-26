@@ -12,7 +12,6 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Cached DB connection for serverless
 let cached = global.mongoose;
 if (!cached) cached = global.mongoose = { conn: null, promise: null };
 
@@ -33,20 +32,23 @@ app.use(async (req, res, next) => {
     next();
   } catch (err) {
     console.error("MongoDB error:", err.message);
-    res.status(503).json({ message: "Database temporarily unavailable: " + err.message });
+    return res.status(503).json({ message: "Database temporarily unavailable: " + err.message });
   }
 });
 
-// Mount routes — Vercel passes full path so keep /api prefix
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/chats", chatsRoutes);
 app.use("/api/habits", habitsRoutes);
-app.get("/api/health", (req, res) => res.json({ status: "ok", mongoUri: !!process.env.MONGODB_URI }));
 
-// Fallback
+app.get("/api/health", (req, res) => res.json({ 
+  status: "ok", 
+  mongoUri: !!process.env.MONGODB_URI,
+  jwtSecret: !!process.env.JWT_SECRET
+}));
+
 app.use((req, res) => {
-  res.status(404).json({ message: "API route not found", path: req.path });
+  res.status(404).json({ message: "API route not found", path: req.path, method: req.method });
 });
 
 module.exports = app;
