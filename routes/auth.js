@@ -131,4 +131,10 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
+// Alias /register → same as /signup
+router.post("/register", async (req, res) => {
+  req.url = "/signup";
+  router.handle(req, res, () => {});
+});
+
 module.exports = router;
