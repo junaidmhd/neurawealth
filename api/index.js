@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-// Routes
 const authRoutes = require("../routes/auth");
 const notesRoutes = require("../routes/notes");
 const chatsRoutes = require("../routes/chats");
@@ -21,8 +20,7 @@ async function connectDB() {
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 10000,
     });
   }
   cached.conn = await cached.promise;
@@ -34,15 +32,21 @@ app.use(async (req, res, next) => {
     await connectDB();
     next();
   } catch (err) {
-    console.error("MongoDB connection error:", err.message);
+    console.error("MongoDB error:", err.message);
     res.status(503).json({ message: "Database temporarily unavailable: " + err.message });
   }
 });
 
+// Mount routes — Vercel passes full path so keep /api prefix
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/chats", chatsRoutes);
 app.use("/api/habits", habitsRoutes);
-app.get("/api/health", (req, res) => res.json({ status: "ok", env: !!process.env.MONGODB_URI }));
+app.get("/api/health", (req, res) => res.json({ status: "ok", mongoUri: !!process.env.MONGODB_URI }));
+
+// Fallback
+app.use((req, res) => {
+  res.status(404).json({ message: "API route not found", path: req.path });
+});
 
 module.exports = app;
