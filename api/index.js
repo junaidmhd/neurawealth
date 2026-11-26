@@ -6,9 +6,9 @@ const authRoutes = require("../routes/auth");
 const notesRoutes = require("../routes/notes");
 const chatsRoutes = require("../routes/chats");
 const habitsRoutes = require("../routes/habits");
+const aiRoutes = require("../routes/ai");
 
 const app = express();
-
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
@@ -40,11 +40,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/chats", chatsRoutes);
 app.use("/api/habits", habitsRoutes);
+app.use("/api/ai", aiRoutes);
 
-app.get("/api/health", (req, res) => res.json({ 
-  status: "ok", 
+app.get("/api/health", (req, res) => res.json({
+  status: "ok",
   mongoUri: !!process.env.MONGODB_URI,
-  jwtSecret: !!process.env.JWT_SECRET
+  jwtSecret: !!process.env.JWT_SECRET,
+  groqKey: !!process.env.GROQ_API_KEY
 }));
 
 app.use((req, res) => {
