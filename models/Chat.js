@@ -1,43 +1,56 @@
-// Plain JSON-file store for AI Advisor conversations (no database needed).
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
 
-const DATA_DIR = path.join(__dirname, "..", "data");
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-const FILE = path.join(DATA_DIR, "chats.json");
+const messageSchema = new mongoose.Schema({
+  role: { type: String, enum: ["user", "assistant"], required: true },
+  content: { type: String, required: true },
+  at: { type: Date, default: Date.now }
+});
 
-const read = () => { try { return fs.existsSync(FILE) ? JSON.parse(fs.readFileSync(FILE, "utf8")) : []; } catch { return []; } };
-const write = (d) => fs.writeFileSync(FILE, JSON.stringify(d, null, 2), "utf8");
-const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const chatSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  title: { type: String, default: "New conversation" },
+  messages: [messageSchema],
+}, { timestamps: true });
 
-function list(userId) {
-  return read().filter(c => c.userId === userId)
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-    .map(({ messages, ...meta }) => ({ ...meta, count: messages.length }));
+const Chat = mongoose.model("Chat", chatSchema);
+
+async function list(userId) {
+  const chats = await Chat.find({ userId }).sort({ updatedAt: -1 }).lean();
+  return chats.map(({ messages, ...meta }) => ({ ...meta, _id: meta._id.toString(), count: messages.length }));
 }
-function get(id, userId) { return read().find(c => c._id === id && c.userId === userId) || null; }
-function create(userId, title = "New conversation") {
-  const all = read(); const now = new Date().toISOString();
-  const chat = { _id: newId(), userId, title, messages: [], createdAt: now, updatedAt: now };
-  all.unshift(chat); write(all); return chat;
+
+async function get(id, userId) {
+  const chat = await Chat.findOne({ _id: id, userId }).lean();
+  if (!chat) return null;
+  return { ...chat, _id: chat._id.toString() };
 }
-function addMessages(id, userId, msgs) {
-  const all = read(); const c = all.find(x => x._id === id && x.userId === userId);
-  if (!c) return null;
-  const now = new Date().toISOString();
-  msgs.forEach(m => c.messages.push({ role: m.role, content: m.content, at: now }));
-  if (c.title === "New conversation") {
-    const first = c.messages.find(m => m.role === "user");
-    if (first) c.title = first.content.slice(0, 48) + (first.content.length > 48 ? "…" : "");
+
+async function create(userId, title = "New conversation") {
+  const chat = await Chat.create({ userId, title, messages: [] });
+  return { ...chat.toObject(), _id: chat._id.toString() };
+}
+
+async function addMessages(id, userId, msgs) {
+  const chat = await Chat.findOne({ _id: id, userId });
+  if (!chat) return null;
+  msgs.forEach(m => chat.messages.push({ role: m.role, content: m.content }));
+  if (chat.title === "New conversation") {
+    const first = chat.messages.find(m => m.role === "user");
+    if (first) chat.title = first.content.slice(0, 48) + (first.content.length > 48 ? "…" : "");
   }
-  c.updatedAt = now; write(all); return c;
+  await chat.save();
+  return { ...chat.toObject(), _id: chat._id.toString() };
 }
-function rename(id, userId, title) {
-  const all = read(); const c = all.find(x => x._id === id && x.userId === userId);
-  if (!c) return null; c.title = String(title).slice(0, 80) || c.title; write(all); return c;
+
+async function rename(id, userId, title) {
+  const chat = await Chat.findOneAndUpdate({ _id: id, userId }, { title: String(title).slice(0, 80) }, { new: true });
+  if (!chat) return null;
+  return { ...chat.toObject(), _id: chat._id.toString() };
 }
-function remove(id, userId) {
-  const all = read(); const rest = all.filter(c => !(c._id === id && c.userId === userId));
-  if (rest.length === all.length) return false; write(rest); return true;
+
+async function remove(id, userId) {
+  const result = await Chat.deleteOne({ _id: id, userId });
+  return result.deletedCount > 0;
 }
+
 module.exports = { list, get, create, addMessages, rename, remove };
